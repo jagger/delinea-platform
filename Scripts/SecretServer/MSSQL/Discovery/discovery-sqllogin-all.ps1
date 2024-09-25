@@ -18,7 +18,7 @@ $logPath = 'C:\scripts'
 $TargetServer = $args[0]
 
 $logFile = "$logPath\$($TargetServer)_findsqllogins.txt"
-Write-Output "[$(Get-Date -Format yyyyMMdd)] Processing Targeting machine: $TargetServer" | Out-File $logFile -Force
+Write-Output "[$(Get-Date -Format yyyyMMdd)] Processing Targeting machine: $TargetServer" | Add-Content $logFile -Force
 
 <# Based on credential type of argument #>
 # Windows Domain with domain name
@@ -36,12 +36,12 @@ $Password = $args[3]
 if ( $Username -and $Password ) {
     $passwd = $Password | ConvertTo-SecureString -AsPlainText -Force
     $sqlCred = New-Object System.Management.Automation.PSCredential -ArgumentList $Username,$passwd
-    Write-Output "[$(Get-Date -Format yyyyMMdd)] Using Privileged Account: $($sqlCred.Username)" | Out-File $logFile -Force
+    Write-Output "[$(Get-Date -Format yyyyMMdd)] Using Privileged Account: $($sqlCred.Username)" | Add-Content $logFile -Force
 }
 
 $ProgressPreference = 'SilentlyContinue'
 if (-not (Get-InstalledModule dbatools)) {
-    Write-Output "[$(Get-Date -Format yyyyMMdd)] dbatools module not found" | Out-File $logFile -Force
+    Write-Output "[$(Get-Date -Format yyyyMMdd)] dbatools module not found" | Add-Content $logFile -Force
     throw "The module dbatools is required for this script. Please run 'Install-Module dbatools' in an elevated session on your Distributed Engine and/or Web Node."
 } else {
     Import-Module dbatools -Force
@@ -58,10 +58,10 @@ try {
         EnableException = $true
     }
     $sqlEngines = Find-DbaInstance @p
-    Write-Output "[$(Get-Date -Format yyyyMMdd)] SQL Instances found: $($sqlEngines.SqlInstance -join ',')" | Out-File $logFile -Force
+    Write-Output "[$(Get-Date -Format yyyyMMdd)] SQL Instances found: $($sqlEngines.SqlInstance -join ',')" | Add-Content $logFile -Force
 } catch {
     if (Test-Path $logPath) {
-        Write-Output "[$(Get-Date -Format yyyyMMdd)] Issue finding SQL Instances on $TargetServer - $($_.Exception.Message)" | Out-File $logFile -Force
+        Write-Output "[$(Get-Date -Format yyyyMMdd)] Issue finding SQL Instances on $TargetServer - $($_.Exception.Message)" | Add-Content $logFile -Force
     } else {
         Write-Output "[$(Get-Date -Format yyyyMMdd)] Issue finding SQL Instances on $TargetServer - $($_.Exception.Message)"
     }
@@ -82,10 +82,10 @@ if ($sqlEngines) {
             }
             try {
                 $cn = Connect-DbaInstance @p
-                Write-Output "[$(Get-Date -Format yyyyMMdd)] Connected to SQL Server Instance: $sqlInstanceValue" | Out-File $logFile -Force
+                Write-Output "[$(Get-Date -Format yyyyMMdd)] Connected to SQL Server Instance: $sqlInstanceValue" | Add-Content $logFile -Force
             } catch {
                 if (Test-Path $logPath) {
-                    Write-Output "[$(Get-Date -Format yyyyMMdd)] Issue connecting to $sqlInstanceValue - $($_.Exception.Message)" | Out-File $logFile -Force
+                    Write-Output "[$(Get-Date -Format yyyyMMdd)] Issue connecting to $sqlInstanceValue - $($_.Exception.Message)" | Add-Content $logFile -Force
                 } else {
                     Write-Output "[$(Get-Date -Format yyyyMMdd)] Issue connecting to $sqlInstanceValue - $($_.Exception.Message)"
                 }
@@ -102,11 +102,11 @@ if ($sqlEngines) {
                 EnableException = $true
             }
             $logins = Get-DbaLogin @p
-            Write-Output "[$(Get-Date -Format yyyyMMdd)] SQL Server Logins count: $($logins.Count)" | Out-File $logFile -Force
+            Write-Output "[$(Get-Date -Format yyyyMMdd)] SQL Server Logins count: $($logins.Count)" | Add-Content $logFile -Force
         } catch {
             if (Test-Path $logPath) {
                 if (Test-Path $logFile) { $append = $true }
-                Write-Output "[$(Get-Date -Format yyyyMMdd)] Issue connecting to $sqlInstanceValue - $($_.Exception.Message)" | Out-File $logFile -Append:$append
+                Write-Output "[$(Get-Date -Format yyyyMMdd)] Issue connecting to $sqlInstanceValue - $($_.Exception.Message)" | Add-Content $logFile -Append:$append
             } else {
                 Write-Output "[$(Get-Date -Format yyyyMMdd)] Issue connecting to $sqlInstanceValue - $($_.Exception.Message)"
             }
@@ -115,7 +115,7 @@ if ($sqlEngines) {
 
         <# Output object for Discovery #>
         foreach ($login in $logins) {
-            Write-Output "[$(Get-Date -Format yyyyMMdd)] SQL Server Login found: $login" | Out-File $logFile -Force
+            Write-Output "[$(Get-Date -Format yyyyMMdd)] SQL Server Login found: $login" | Add-Content $logFile -Force
             [PSCustomObject]@{
                 Machine  = $login.Parent.Name
                 Username = $login.Name
