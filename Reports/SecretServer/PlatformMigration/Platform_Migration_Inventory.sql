@@ -12,7 +12,7 @@ UNION ALL
 SELECT '--> Platform Adoption Ready' AS [Item],
 	CASE
 		WHEN EXISTS (SELECT * FROM tbDomain WHERE DomainTypeId IN (2, 3) AND Active = 1) THEN 'No'
-		WHEN (SELECT COUNT(*) FROM tbTeam WHERE Active = 1) > 0 THEN 'No'
+		WHEN (SELECT COUNT(*) FROM tbTeam WHERE Active = 1) > 1 THEN 'No'
 		WHEN (SELECT COUNT(*) FROM tbUser WHERE Enabled = 1 AND IsApplicationAccount = 1 AND DomainId IS NOT NULL) > 0 THEN 'No'
 		WHEN (SELECT COUNT(*) FROM tbEventSubscription) > 0 THEN 'Possible'
 		WHEN (SELECT COUNT(*) FROM tbEventPipelinePolicy) > 0 THEN 'Possible'
@@ -23,6 +23,15 @@ SELECT '--> Platform Adoption Ready' AS [Item],
 		WHEN (SELECT COUNT(*) FROM tbEventSubscription) > 0 OR (SELECT COUNT(*) FROM tbEventPipelinePolicy) > 0 THEN 'To be Reviewed'
 		ELSE ''
 	END AS [Comment]
+
+UNION ALL
+
+SELECT '--> DomainLocal Groups found' AS [Item],
+	CASE
+		WHEN (SELECT COUNT(*) FROM tbGroup WHERE GroupTypeID = 3) > 1  THEN 'Yes'
+		ELSE 'No'
+	END AS [Value],
+	'' AS [Comment]
 UNION ALL
 
 SELECT '--> UsePlatformSettings' AS [Item],
@@ -691,3 +700,10 @@ UNION ALL
 
 SELECT '--> Metadata Items', CAST(COUNT(*) AS NVARCHAR(50)), ''
 FROM tbMetadataItemData mid
+UNION ALL 
+
+SELECT '----> DomainLocal Group Name: ' + GroupName AS [Item],
+    '' AS [Value],
+    '' AS [Comment]
+FROM tbGroup
+WHERE GroupTypeID = 3 AND Active = 1
